@@ -4,7 +4,7 @@ on:
   push:
     branches:
       - DEV
-  workflow_dispatch: # Allows manual triggers for demonstration or testing
+  workflow_dispatch: # Allows manual trigger for demonstration or testing
 
 jobs:
   terraform:
