@@ -14,21 +14,22 @@ jobs:
     permissions:
       id-token: write
       contents: read
+      issues: write # Required for manual approval step to create an issue
 
     steps:
       # Step 1: Checkout the Code
       - name: Checkout Code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       # Step 2: Set Up Terraform
       - name: Set up Terraform
-        uses: hashicorp/setup-terraform@v2
+        uses: hashicorp/setup-terraform@v3
         with:
           terraform_version: 1.5.7
 
       # Step 3: Azure Login using Service Principal
       - name: Log in to Azure
-        uses: azure/login@v1
+        uses: azure/login@v3
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
@@ -49,15 +50,20 @@ jobs:
           ARM_CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
           ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
           ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
-        run: terraform plan
+        run: terraform plan -out=tfplan
         working-directory: .
 
-      # Step 6: Wait for Manual Approval
-      - name: Wait for Manual Approval
-        if: success()
-        run: |
-          echo "Waiting for manual approval. Approve the workflow to continue."
-        timeout-minutes: 1440 # Timeout after 24 hours (adjust as needed)
+      # Step 6: Manual Approval Step
+      - name: Manual Approval
+        uses: trstringer/manual-approval@v1.9.1
+        with:
+          secret: ${{ secrets.GITHUB_TOKEN }}
+          approvers: noahgallodevoteam # Replace with the GitHub username(s) for approval
+          minimum-approvals: 1
+          issue-title: "Manual Approval for Terraform Apply"
+          issue-body: "Please approve or deny the deployment before proceeding with the apply step."
+          exclude-workflow-initiator-as-approver: false
+        timeout-minutes: 1440 # Set timeout to 24 hours
 
       # Step 7: Terraform Apply
       - name: Terraform Apply
@@ -67,5 +73,5 @@ jobs:
           ARM_CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
           ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
           ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
-        run: terraform apply -auto-approve
+        run: terraform apply tfplan
         working-directory: .
