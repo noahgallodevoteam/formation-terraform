@@ -58,7 +58,7 @@ jobs:
         uses: trstringer/manual-approval@v1.9.1
         with:
           secret: ${{ secrets.GITHUB_TOKEN }}
-          approvers: your-github-username # Replace with the GitHub username(s) for approval
+          approvers: noahgallodevoteam # Replace with the GitHub username(s) for approval
           minimum-approvals: 1
           issue-title: "Manual Approval for Terraform Apply"
           issue-body: "Please approve or deny the deployment before proceeding with the apply step."
